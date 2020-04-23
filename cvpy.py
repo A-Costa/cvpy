@@ -1,12 +1,16 @@
 import mido
 import numpy as np
+import sounddevice
+import threading
+import time
 
 
 class MidiHandler:
-    def __init__(self, input_device, listen_on):
+    def __init__(self, input_device, listen_on, status_out):
         self.midi_in = mido.open_input(input_device)
         self.listen_on = listen_on[:]
         self.status_array = np.zeros(len(self.listen_on))
+        self.status_out = status_out
 
     def get_status(self, index=None):
         if not index:
@@ -27,4 +31,66 @@ class MidiHandler:
 
     def run(self):
         for msg in self.midi_in:
+            print(msg)
             self.update_status_array(msg)
+            self.status_out[:] = self.status_array
+
+
+class AudioHandler:
+    status_in = None
+
+    def __init__(self, device, status_in):
+        channels = len(status_in)
+        assert channels < 8
+        if AudioHandler.status_in is None:
+            AudioHandler.status_in = status_in
+        self.sounddevice = sounddevice.OutputStream(
+            samplerate=48000,
+            blocksize=64,
+            channels=channels,
+            device=device,
+            callback=self.callback,
+            finished_callback=self.finished_callback
+        )
+
+    @staticmethod
+    def create_block(frames):
+        return AudioHandler.status_in
+        pass
+
+    @staticmethod
+    def callback(outdata, frames, time, status):
+        block = AudioHandler.create_block(frames)
+        # outdata[:] = block
+        outdata[:] = np.resize(np.array([0]), frames).reshape(-1, 1)
+        # print(f"block: {block}")
+
+    @staticmethod
+    def finished_callback():
+        pass
+
+    def run(self):
+        with self.sounddevice:
+            time.sleep(10)
+
+
+if __name__ == "__main__":
+    listen_on = [60, 61, 63]
+    status = np.zeros(len(listen_on))
+
+    def midi_thread(status):
+        handler = MidiHandler('Driver IAC Bus 1', listen_on, status)
+        handler.run()
+
+    def audio_thread(status):
+        handler = AudioHandler('Auricolari esterni', status)
+        handler.run()
+
+    m_t = threading.Thread(target=midi_thread, args=(status,))
+    a_t = threading.Thread(target=audio_thread, args=(status,))
+    print(status)
+    m_t.start()
+    a_t.start()
+    a_t.join()
+    print("m_t terminated")
+    print(status)
