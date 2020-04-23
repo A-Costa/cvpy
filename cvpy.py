@@ -36,13 +36,9 @@ class MidiHandler:
 
 
 class AudioHandler:
-    status_in = None
-
     def __init__(self, device, status_in, event_terminate):
         channels = len(status_in)
         assert channels < 8
-        if AudioHandler.status_in is None:
-            AudioHandler.status_in = status_in
         self.sounddevice = sounddevice.OutputStream(
             samplerate=48000,
             blocksize=64,
@@ -51,23 +47,26 @@ class AudioHandler:
             callback=self.callback,
             finished_callback=self.finished_callback
         )
+        self.status_in = status_in
         self.event_terminate = event_terminate
 
-    @staticmethod
-    def create_block(frames):
+    def create_block(self, frames):
         # print(AudioHandler.status_in)
-        channels = len(AudioHandler.status_in)
-        block = np.ones((frames, channels)) * AudioHandler.status_in
+        channels = len(self.status_in)
+        block = np.ones((frames, channels)) * self.status_in
         return block
 
-    @staticmethod
-    def callback(outdata, frames, time, status):
-        block = AudioHandler.create_block(frames)
+    def callback(*args):
+        self = args[0]
+        outdata = args[1]
+        frames = args[2]
+        # time = args[3]
+        # status = args[4]
+        block = self.create_block(frames)
         outdata[:] = block*0.5
 
-    @staticmethod
-    def finished_callback():
-        print("executing finished_callback")
+    def finished_callback(*args):
+        print("Executing finished_callback")
         pass
 
     def run(self):
@@ -77,7 +76,7 @@ class AudioHandler:
 
 if __name__ == "__main__":
     event_terminate_audio = threading.Event()
-    listen_on = [60, 61]
+    listen_on = [60, 61, 62, 63]
     status = np.zeros(len(listen_on))
 
     def midi_thread(status):
@@ -90,7 +89,6 @@ if __name__ == "__main__":
 
     m_t = threading.Thread(target=midi_thread, args=(status,), daemon=True)
     a_t = threading.Thread(target=audio_thread, args=(status, event_terminate_audio))
-    print(status)
     m_t.start()
     a_t.start()
 
