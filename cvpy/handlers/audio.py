@@ -1,26 +1,31 @@
 import numpy as np
 import sounddevice
+import threading
+
+from cvpy.outputs import Outputs
 
 
 class AudioHandler:
-    def __init__(self, device, status_in, event_terminate):
-        channels = len(status_in)
-        assert channels < 8
+    def __init__(self, device: str, outputs: Outputs,
+                 event_terminate: threading.Event):
+
+        self.channels = outputs.output_needed
+
         self.sounddevice = sounddevice.OutputStream(
             samplerate=48000,
             blocksize=64,
-            channels=channels,
+            channels=self.channels,
             device=device,
             callback=self.callback,
             finished_callback=self.finished_callback
         )
-        self.status_in = status_in
+
+        self.outputs = outputs
         self.event_terminate = event_terminate
 
     def create_block(self, frames):
         # print(AudioHandler.status_in)
-        channels = len(self.status_in)
-        block = np.ones((frames, channels)) * self.status_in
+        block = np.ones((frames, self.channels)) * self.outputs.get_status()
         return block
 
     def callback(*args):
