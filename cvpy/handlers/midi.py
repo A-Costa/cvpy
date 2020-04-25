@@ -1,20 +1,23 @@
 import mido
 import numpy as np
 
+from cvpy.outputs import Outputs
+
 
 class MidiHandler:
-    def __init__(self, input_device, listen_on, status_out):
+    def __init__(self, input_device: str, outputs: Outputs):
         self.midi_in = mido.open_input(input_device)
-        self.listen_on = listen_on[:]
-        self.status_array = np.zeros(len(self.listen_on))
-        self.status_out = status_out
+        self.outputs = outputs
 
-    def get_status(self, index=None):
-        if not index:
-            return self.note_status
-        else:
-            return self.note_status[index]
+    def run(self):
+        for msg in self.midi_in:
+            print(dir(msg))
+            print(msg.dict())
+            print(type(msg))
+            # self.outputs.update(msg)
 
+
+"""
     def update_status(self, note, value):
         if note in self.listen_on:
             index = self.listen_on.index(note)
@@ -25,9 +28,4 @@ class MidiHandler:
             self.update_status(midi_message.note, 1)
         if midi_message.type == 'note_off':
             self.update_status(midi_message.note, 0)
-
-    def run(self):
-        for msg in self.midi_in:
-            print(msg)
-            self.update_status_array(msg)
-            self.status_out[:] = self.status_array
+"""
