@@ -30,7 +30,15 @@ class Outputs:
         self.output_status = np.zeros(self.output_needed)
 
     def filter(self, msg):
-        return any([output.is_relevant(msg) for output in self.outputs])
+        if msg.channel in self.listening:
+            if msg.type in ['note_on', 'note_off']:
+                return msg.note in self.listening[msg.channel]['note']
+            elif msg.type == 'control_change':
+                return msg.control in self.listening[msg.channel]['control']
+            else:
+                return False
+        else:
+            return False
 
     def update(self, msg):
         if self.filter(msg):
