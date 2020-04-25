@@ -4,13 +4,13 @@ import threading
 
 from cvpy.handlers import AudioHandler, MidiHandler
 from cvpy.outputs import Outputs
-from cvpy.outputs.types import NoteOutput, GateOutput, CvOutput
+from cvpy.outputs.types import NoteOutput, GateOutput, CvOutput, PitchOutput
 
 
 if __name__ == "__main__":
     print("* CVPY * v0.0.1")
     event = threading.Event()
-    outputs = Outputs([NoteOutput(0), GateOutput(1, 60), CvOutput(2, 48)])
+    outputs = Outputs([NoteOutput(0), GateOutput(1, 60), CvOutput(2, 48), PitchOutput(0)])
 
     def midi_thread(outputs):
         handler = MidiHandler('Driver IAC Bus 1', outputs)

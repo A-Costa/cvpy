@@ -15,6 +15,8 @@ class BaseOutput:
             check_message = msg.note in self.listen_on['note']
         elif msg.type == 'control_change':
             check_message = msg.control in self.listen_on['control']
+        elif msg.type == 'pitchwheel':
+            check_message = ('pitchwheel' in self.listen_on['control'])
         else:
             check_message = False
 
@@ -64,6 +66,20 @@ class CvOutput(BaseOutput):
         if self.is_relevant(msg):
             if msg.type == 'control_change':
                 self.output_status[0] = msg.value/128
+            return True
+        else:
+            return False
+
+
+class PitchOutput(BaseOutput):
+    def __init__(self, channel):
+        super().__init__(1)
+        self.listen_on = {'channel': channel, 'note': set(), 'control': {'pitchwheel'}}
+
+    def update(self, msg):
+        if self.is_relevant(msg):
+            if msg.type == 'pitchwheel':
+                self.output_status[0] = msg.pitch/8192
             return True
         else:
             return False

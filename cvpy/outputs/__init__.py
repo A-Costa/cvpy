@@ -35,6 +35,8 @@ class Outputs:
                 return msg.note in self.listening[msg.channel]['note']
             elif msg.type == 'control_change':
                 return msg.control in self.listening[msg.channel]['control']
+            elif msg.type == 'pitchwheel':
+                return 'pitchwheel' in self.listening[msg.channel]['control']
             else:
                 return False
         else:

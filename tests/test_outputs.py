@@ -2,14 +2,14 @@ import numpy as np
 import pytest
 
 from cvpy.outputs import Outputs
-from cvpy.outputs.types import NoteOutput, GateOutput, CvOutput
+from cvpy.outputs.types import NoteOutput, GateOutput, CvOutput, PitchOutput
 
 from mido.messages.messages import Message
 
 
 @pytest.fixture
 def outputs():
-    return Outputs([NoteOutput(0), GateOutput(1, 72), CvOutput(0, 2)])
+    return Outputs([NoteOutput(0), GateOutput(1, 72), CvOutput(0, 2), PitchOutput(0)])
 
 
 def make_note_on_message(channel, note):
@@ -29,9 +29,9 @@ def make_cc_message(channel, control):
 
 
 def test_constructor(outputs):
-    assert outputs.output_needed == 4
+    assert outputs.output_needed == 5
     assert isinstance(outputs.output_status, np.ndarray)
-    assert len(outputs.output_status) == 4
+    assert len(outputs.output_status) == 5
 
     assert outputs.outputs[0].listen_on == {'channel': 0,
                                             'note': set(range(128)),
@@ -42,9 +42,12 @@ def test_constructor(outputs):
     assert outputs.outputs[2].listen_on == {'channel': 0,
                                             'note': set(),
                                             'control': {2}}
+    assert outputs.outputs[3].listen_on == {'channel': 0,
+                                            'note': set(),
+                                            'control': {'pitchwheel'}}
 
     assert outputs.listening == {0: {'note': set(range(128)),
-                                     'control': {2}
+                                     'control': {2, 'pitchwheel'}
                                      },
                                  1: {'note': {72},
                                      'control': set()
@@ -63,6 +66,10 @@ def test_relevant_msg(outputs):
 
     for m in cc_messages:
         assert outputs.filter(m)
+
+    pitchwheel_message = Message.from_dict({'type': 'pitchwheel', 'time': 0, 'channel': 0, 'pitch': 352})
+    assert pitchwheel_message.type == 'pitchwheel'
+    assert outputs.filter(pitchwheel_message)
 
 
 def test_non_relevant_msg(outputs):
