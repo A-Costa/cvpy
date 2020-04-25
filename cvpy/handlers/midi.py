@@ -10,4 +10,5 @@ class MidiHandler:
 
     def run(self):
         for msg in self.midi_in:
+            print(msg)
             self.outputs.update(msg)
