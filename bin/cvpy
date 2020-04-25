@@ -1,33 +1,34 @@
 #!/usr/bin/env python3
 
-import numpy as np
 import threading
 
 from cvpy.handlers import AudioHandler, MidiHandler
+from cvpy.outputs import Outputs
+from cvpy.outputs.types import NoteOutput, GateOutput, CvOutput
 
 
 if __name__ == "__main__":
-    event_terminate_audio = threading.Event()
-    listen_on = [60, 61]
-    status = np.zeros(len(listen_on))
+    print("* CVPY * v0.0.1")
+    event = threading.Event()
+    outputs = Outputs([NoteOutput(0), GateOutput(1, 60), CvOutput(2, 48)])
 
-    def midi_thread(status):
-        handler = MidiHandler('Driver IAC Bus 1', listen_on, status)
+    def midi_thread(outputs):
+        handler = MidiHandler('Driver IAC Bus 1', outputs)
         handler.run()
 
-    def audio_thread(status, event_terminate):
-        handler = AudioHandler('Soundflower (2ch)', status, event_terminate)
+    def audio_thread(outputs, event):
+        handler = AudioHandler('ES-8', outputs, event)
         handler.run()
 
-    m_t = threading.Thread(target=midi_thread, args=(status,), daemon=True)
-    a_t = threading.Thread(target=audio_thread, args=(status, event_terminate_audio))
+    m_t = threading.Thread(target=midi_thread, args=(outputs,), daemon=True)
+    a_t = threading.Thread(target=audio_thread, args=(outputs, event))
     m_t.start()
     a_t.start()
 
     try:
         a_t.join()
     except KeyboardInterrupt:
-        event_terminate_audio.set()
+        event.set()
 
     print("Terminating...")
     a_t.join()
