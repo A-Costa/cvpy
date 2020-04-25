@@ -24,7 +24,7 @@ class BaseOutput:
 class NoteOutput(BaseOutput):
     def __init__(self, channel):
         super().__init__(2)
-        self.listen_on = {'channel': channel, 'note': set(range(128)), 'control': {}}
+        self.listen_on = {'channel': channel, 'note': set(range(128)), 'control': set()}
 
     def update(self, msg):
         if self.is_relevant(msg):
@@ -42,7 +42,7 @@ class NoteOutput(BaseOutput):
 class GateOutput(BaseOutput):
     def __init__(self, channel, note):
         super().__init__(1)
-        self.listen_on = {'channel': channel, 'note': {note}, 'control': {}}
+        self.listen_on = {'channel': channel, 'note': {note}, 'control': set()}
 
     def update(self, msg):
         if self.is_relevant(msg):
@@ -58,7 +58,7 @@ class GateOutput(BaseOutput):
 class CvOutput(BaseOutput):
     def __init__(self, channel, control_change):
         super().__init__(1)
-        self.listen_on = {'channel': channel, 'note': {}, 'control': {control_change}}
+        self.listen_on = {'channel': channel, 'note': set(), 'control': {control_change}}
 
     def update(self, msg):
         if self.is_relevant(msg):

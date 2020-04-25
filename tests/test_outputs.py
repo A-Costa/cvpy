@@ -1,4 +1,4 @@
-import mido
+import numpy as np
 import pytest
 
 from cvpy.outputs import Outputs
@@ -26,6 +26,30 @@ def make_cc_message(channel, control):
                               'control': control,
                               'value': 64,
                               'channel': channel})
+
+
+def test_constructor(outputs):
+    assert outputs.output_needed == 4
+    assert isinstance(outputs.output_status, np.ndarray)
+    assert len(outputs.output_status) == 4
+
+    assert outputs.outputs[0].listen_on == {'channel': 0,
+                                            'note': set(range(128)),
+                                            'control': set()}
+    assert outputs.outputs[1].listen_on == {'channel': 1,
+                                            'note': {72},
+                                            'control': set()}
+    assert outputs.outputs[2].listen_on == {'channel': 0,
+                                            'note': set(),
+                                            'control': {2}}
+
+    assert outputs.listening == {0: {'note': set(range(128)),
+                                     'control': {2}
+                                     },
+                                 1: {'note': {72},
+                                     'control': set()
+                                     }
+                                 }
 
 
 def test_relevant_msg(outputs):
@@ -74,3 +98,10 @@ def test_output_update(outputs):
     outputs.update(cc_message)
 
     assert outputs.outputs[2].output_status[0] == 0.5
+
+
+def test_too_many_outputs():
+    with pytest.raises(AssertionError):
+        Outputs([NoteOutput(0), NoteOutput(1),
+                 NoteOutput(2), NoteOutput(3),
+                 NoteOutput(4)])
