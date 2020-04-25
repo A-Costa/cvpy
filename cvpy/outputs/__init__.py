@@ -40,11 +40,19 @@ class Outputs:
         else:
             return False
 
+    def build_output_status(self):
+        o = np.concatenate([output.output_status for output in self.outputs])
+        self.output_status[:] = o
+
     def update(self, msg):
         if self.filter(msg):
             for output in self.outputs:
                 updated = output.update(msg)
                 if updated:
                     break
+            self.build_output_status()
         else:
             pass
+
+    def get_status(self):
+        return self.output_status[:]
