@@ -105,3 +105,8 @@ def test_too_many_outputs():
         Outputs([NoteOutput(0), NoteOutput(1),
                  NoteOutput(2), NoteOutput(3),
                  NoteOutput(4)])
+
+
+def test_wrong_outputs():
+    with pytest.raises(AssertionError):
+        Outputs([NoteOutput(0), NoteOutput(1), GateOutput(0, 60)])
